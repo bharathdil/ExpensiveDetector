@@ -1,0 +1,70 @@
+{
+  "name": "Expense",
+  "type": "object",
+  "properties": {
+    "amount": {
+      "type": "number",
+      "description": "Transaction amount"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "expense",
+        "income"
+      ],
+      "default": "expense",
+      "description": "Whether this is an expense or income"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "food",
+        "movies",
+        "shopping",
+        "travel",
+        "bills",
+        "health",
+        "education",
+        "entertainment",
+        "other"
+      ],
+      "default": "other",
+      "description": "Expense category"
+    },
+    "merchant": {
+      "type": "string",
+      "description": "Merchant or payee name"
+    },
+    "note": {
+      "type": "string",
+      "description": "Optional note about the transaction"
+    },
+    "location": {
+      "type": "string",
+      "description": "Optional location"
+    },
+    "date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Transaction date and time"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "manual",
+        "auto_detected"
+      ],
+      "default": "manual",
+      "description": "How the transaction was added"
+    },
+    "raw_message": {
+      "type": "string",
+      "description": "Original payment message if auto-detected"
+    }
+  },
+  "required": [
+    "amount",
+    "category",
+    "date"
+  ]
+}

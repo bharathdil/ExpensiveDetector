@@ -1,0 +1,111 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 20% 98%;
+    --foreground: 240 10% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 10%;
+    --primary: 262 83% 58%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 20% 96%;
+    --secondary-foreground: 240 10% 20%;
+    --muted: 240 15% 94%;
+    --muted-foreground: 240 8% 52%;
+    --accent: 262 83% 96%;
+    --accent-foreground: 262 83% 40%;
+    --destructive: 0 80% 58%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 15% 90%;
+    --input: 240 15% 92%;
+    --ring: 262 83% 58%;
+    --radius: 1rem;
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+  }
+
+  .dark {
+    --background: 240 15% 8%;
+    --foreground: 240 5% 96%;
+    --card: 240 12% 12%;
+    --card-foreground: 240 5% 96%;
+    --popover: 240 12% 12%;
+    --popover-foreground: 240 5% 96%;
+    --primary: 262 83% 65%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 10% 18%;
+    --secondary-foreground: 240 5% 85%;
+    --muted: 240 10% 18%;
+    --muted-foreground: 240 5% 55%;
+    --accent: 262 40% 22%;
+    --accent-foreground: 262 83% 75%;
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 10% 20%;
+    --input: 240 10% 18%;
+    --ring: 262 83% 65%;
+  }
+}
+
+@layer base {
+  /* Prevent overscroll bounce on iOS */
+  html, body {
+    overscroll-behavior: none;
+    overscroll-behavior-y: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground font-inter antialiased;
+    /* Prevent text selection highlight on tap */
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Disable text selection on interactive elements */
+  button, a, nav, [role="button"] {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Safe area support */
+  .pt-safe {
+    padding-top: max(0.75rem, env(safe-area-inset-top, 0.75rem));
+  }
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}
+
+.gradient-card {
+  background: linear-gradient(135deg, hsl(262, 83%, 58%) 0%, hsl(290, 70%, 50%) 100%);
+}
+
+.gradient-income {
+  background: linear-gradient(135deg, hsl(142, 76%, 36%) 0%, hsl(160, 70%, 42%) 100%);
+}
+
+.category-pill {
+  @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium;
+}
+
+.glass-card {
+  backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+/* Hide scrollbar utility */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
