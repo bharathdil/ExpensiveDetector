@@ -9,8 +9,13 @@ export default function PullToRefresh({ onRefresh, children }) {
   const startY = useRef(null);
   const pulling = useRef(false);
 
+  const getScrollTop = () => {
+    const scroller = document.querySelector('.mobile-shell');
+    return scroller?.scrollTop ?? window.scrollY;
+  };
+
   const onTouchStart = useCallback((e) => {
-    if (window.scrollY === 0) {
+    if (getScrollTop() <= 0) {
       startY.current = e.touches[0].clientY;
       pulling.current = true;
     }

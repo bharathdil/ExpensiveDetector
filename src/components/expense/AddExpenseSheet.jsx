@@ -43,7 +43,7 @@ export default function AddExpenseSheet({ open, onOpenChange, onSave, prefill })
     } catch (error) {
       toast({
         title: 'Could not save transaction',
-        description: error?.message || 'Please check your Supabase setup and try again.',
+        description: error?.message || 'Please try again.',
         variant: 'destructive',
       });
     } finally {

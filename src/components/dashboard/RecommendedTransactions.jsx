@@ -1,60 +1,41 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Sparkles, Plus, X, RefreshCw } from 'lucide-react';
-import { parsePaymentMessage } from '@/lib/paymentParser';
 import { getCategoryConfig } from '@/lib/categoryConfig';
+import { scanRecentPaymentMessages } from '@/lib/smsReader';
 import AddExpenseSheet from '@/components/expense/AddExpenseSheet';
-
-// Simulated recent payment messages (like what would come from SMS/notification reader)
-const SIMULATED_MESSAGES = [
-  'Your A/c XX9102 debited INR 349.00 at Zomato on 18-04-2026. UPI Ref: 1234567890',
-  'You have paid Rs.799 to Spotify via UPI on 18-04-2026.',
-  'INR 120.00 debited from your account at Rapido Cab on 17-04-2026.',
-  'Rs 2499 debited at Myntra on 17-04-2026 via Credit Card.',
-  'Your account debited by INR 85.00 at Café Coffee Day on 16-04-2026.',
-  'INR 1500.00 credited to your account. Ref: Freelance Payment.',
-  'Rs 450 paid to Big Bazaar via UPI on 16-04-2026.',
-  'Debited INR 299.00 at BookMyShow for Movie Tickets on 15-04-2026.',
-];
 
 export default function RecommendedTransactions({ existingExpenses, onSave }) {
   const [recommendations, setRecommendations] = useState([]);
   const [dismissed, setDismissed] = useState(new Set());
   const [confirmItem, setConfirmItem] = useState(null);
   const [scanning, setScanning] = useState(false);
+  const [scanMessage, setScanMessage] = useState('Tap refresh to scan recent SMS messages.');
 
-  const generateRecommendations = () => {
+  const generateRecommendations = async () => {
     setScanning(true);
-    setTimeout(() => {
-      // Parse all sample messages
-      const parsed = SIMULATED_MESSAGES
-        .map((msg, idx) => {
-          const result = parsePaymentMessage(msg);
-          if (!result) return null;
-          return { ...result, _id: idx, raw_message: msg };
-        })
-        .filter(Boolean);
+    setScanMessage('');
 
-      // Filter out ones that look like they're already in existing expenses
-      // (simple heuristic: match by amount + merchant similarity)
-      const filtered = parsed.filter(rec => {
-        return !existingExpenses.some(e =>
-          Math.abs((e.amount || 0) - rec.amount) < 1 &&
-          (e.merchant || '').toLowerCase().includes((rec.merchant || '').toLowerCase().split(' ')[0])
+    try {
+      const result = await scanRecentPaymentMessages({ existingExpenses, limit: 100 });
+      setRecommendations(result.transactions);
+
+      if (result.unavailableReason) {
+        setScanMessage(result.unavailableReason);
+      } else if (result.transactions.length === 0) {
+        setScanMessage(
+          result.totalMessages > 0
+            ? 'No new credit or debit SMS messages found.'
+            : 'No SMS messages found on this device.'
         );
-      });
-
-      setRecommendations(filtered);
+      }
+    } catch (error) {
+      setScanMessage(error?.message || 'Could not scan SMS messages.');
+    } finally {
       setScanning(false);
-    }, 1200);
+    }
   };
 
-  useEffect(() => {
-    generateRecommendations();
-  }, []);
-
   const visible = recommendations.filter(r => !dismissed.has(r._id));
-
-  if (visible.length === 0 && !scanning) return null;
 
   return (
     <>
@@ -66,12 +47,13 @@ export default function RecommendedTransactions({ existingExpenses, onSave }) {
             </div>
             <div>
               <h3 className="font-bold text-sm text-foreground">Detected Payments</h3>
-              <p className="text-xs text-muted-foreground">From recent messages</p>
+              <p className="text-xs text-muted-foreground">From device SMS</p>
             </div>
           </div>
           <button
             onClick={generateRecommendations}
             className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center"
+            disabled={scanning}
           >
             <RefreshCw className={`w-4 h-4 text-muted-foreground ${scanning ? 'animate-spin' : ''}`} />
           </button>
@@ -80,9 +62,9 @@ export default function RecommendedTransactions({ existingExpenses, onSave }) {
         {scanning ? (
           <div className="py-6 flex flex-col items-center gap-2">
             <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-            <p className="text-xs text-muted-foreground">Scanning recent messages...</p>
+            <p className="text-xs text-muted-foreground">Scanning recent SMS messages...</p>
           </div>
-        ) : (
+        ) : visible.length > 0 ? (
           <div className="space-y-2">
             {visible.slice(0, 4).map(rec => {
               const config = getCategoryConfig(rec.category);
@@ -96,7 +78,7 @@ export default function RecommendedTransactions({ existingExpenses, onSave }) {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-foreground truncate">
-                      {rec.merchant || config.label}
+                      {rec.merchant || rec.sms_sender || config.label}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {rec.type === 'income' ? '+' : '-'}₹{rec.amount?.toLocaleString()} · {config.label}
@@ -125,6 +107,16 @@ export default function RecommendedTransactions({ existingExpenses, onSave }) {
                 +{visible.length - 4} more detected
               </p>
             )}
+          </div>
+        ) : (
+          <div className="py-4 text-center">
+            <p className="text-sm text-muted-foreground">{scanMessage}</p>
+            <button
+              onClick={generateRecommendations}
+              className="mt-3 text-primary text-sm font-semibold"
+            >
+              Scan SMS
+            </button>
           </div>
         )}
       </div>

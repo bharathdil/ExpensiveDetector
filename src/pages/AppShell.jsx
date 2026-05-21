@@ -4,7 +4,7 @@ import BottomNav from '@/components/layout/BottomNav';
 import AddExpenseSheet from '@/components/expense/AddExpenseSheet';
 import AnimatedRoutes from '@/components/layout/AnimatedRoutes';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
-import { db } from '@/api/supabaseClient';
+import { db } from '@/api/localStorageClient';
 
 export default function AppShell() {
   const queryClient = useQueryClient();
@@ -33,7 +33,7 @@ export default function AppShell() {
   const handleSave = (data) => mutation.mutate(data);
 
   return (
-    <div className="max-w-md mx-auto min-h-screen relative">
+    <div className="mobile-shell">
       <AnimatedRoutes>
         <Outlet />
       </AnimatedRoutes>

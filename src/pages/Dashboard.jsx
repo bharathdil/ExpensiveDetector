@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { db } from '@/api/supabaseClient';
+import { db } from '@/api/localStorageClient';
 import RecommendedTransactions from '@/components/dashboard/RecommendedTransactions';
 import PullToRefresh from '@/components/layout/PullToRefresh';
 import SummaryCards from '@/components/dashboard/SummaryCards';
@@ -42,7 +42,7 @@ export default function Dashboard({ onAddExpense, confirmPrefill, setConfirmPref
   const handleRefresh = () => queryClient.invalidateQueries({ queryKey: ['expenses'] });
 
   return (
-    <div className="min-h-screen bg-background pb-28">
+    <div className="mobile-page">
       {/* Header */}
       <div className="sticky top-0 bg-background/95 backdrop-blur z-30 px-4 pt-12 pb-3">
         <div className="flex items-center justify-between mb-4">

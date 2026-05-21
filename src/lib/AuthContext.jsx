@@ -1,33 +1,12 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 
-import { db, isSupabaseConfigured, supabase, supabaseConfigErrorMessage, normalizeUser } from '@/api/supabaseClient';
+import { db, normalizeUser } from '@/api/localStorageClient';
 
 const AuthContext = createContext();
 const getAuthError = (error) => {
-  if (error?.code === 'anonymous_provider_disabled') {
-    return {
-      type: 'setup_required',
-      message: 'Enable Anonymous Sign-Ins in your Supabase dashboard, then refresh the app.',
-    };
-  }
-
-  if (error?.code === 'AUTH_REQUIRED' || error?.status === 401) {
-    return {
-      type: 'auth_required',
-      message: 'Authentication required',
-    };
-  }
-
-  if (error?.code === 'SUPABASE_CONFIG_MISSING') {
-    return {
-      type: 'config_error',
-      message: supabaseConfigErrorMessage,
-    };
-  }
-
   return {
     type: 'unknown',
-    message: error?.message || 'Failed to connect to Supabase',
+    message: error?.message || 'Failed to load local app data',
   };
 };
 
@@ -41,42 +20,11 @@ export const AuthProvider = ({ children }) => {
   const [appPublicSettings, setAppPublicSettings] = useState(null); // Contains only { id, public_settings }
 
   useEffect(() => {
-    let mounted = true;
-
     const bootstrap = async () => {
       await checkAppState();
     };
 
     bootstrap();
-
-    if (!supabase) {
-      return () => {
-        mounted = false;
-      };
-    }
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!mounted) {
-        return;
-      }
-
-      const nextUser = normalizeUser(session?.user ?? null);
-      setUser(nextUser);
-      setIsAuthenticated(Boolean(nextUser));
-      setAuthChecked(true);
-      setIsLoadingAuth(false);
-      setIsLoadingPublicSettings(false);
-      if (nextUser) {
-        setAuthError(null);
-      }
-    });
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
   }, []);
 
   const checkAppState = async () => {
@@ -85,23 +33,16 @@ export const AuthProvider = ({ children }) => {
       setIsLoadingAuth(true);
       setAuthError(null);
 
-      if (!isSupabaseConfigured) {
-        throw Object.assign(new Error(supabaseConfigErrorMessage), {
-          code: 'SUPABASE_CONFIG_MISSING',
-          status: 500,
-        });
-      }
-
       const currentUser = await db.auth.me();
       setUser(normalizeUser(currentUser));
       setIsAuthenticated(Boolean(currentUser));
       setAuthChecked(true);
       setAppPublicSettings({
-        provider: 'supabase',
-        auth_mode: 'anonymous',
+        provider: 'localStorage',
+        auth_mode: 'local',
       });
     } catch (error) {
-      console.error('Supabase app state check failed:', error);
+      console.error('Local app state check failed:', error);
       setUser(null);
       setIsAuthenticated(false);
       setAuthChecked(true);
@@ -121,7 +62,7 @@ export const AuthProvider = ({ children }) => {
       setIsAuthenticated(Boolean(currentUser));
       setAuthChecked(true);
     } catch (error) {
-      console.error('Supabase auth check failed:', error);
+      console.error('Local auth check failed:', error);
       setUser(null);
       setIsAuthenticated(false);
       setAuthChecked(true);

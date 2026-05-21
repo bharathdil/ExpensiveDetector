@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { db } from '@/api/supabaseClient';
+import { db } from '@/api/localStorageClient';
 import PageHeader from '@/components/layout/PageHeader';
 
 import { useState } from 'react';
@@ -44,9 +44,9 @@ export default function Analytics() {
   const savingsRate = totalIncome > 0 ? Math.round(((totalIncome - totalExpense) / totalIncome) * 100) : 0;
 
   return (
-    <div className="min-h-screen bg-background pb-28">
+    <div className="mobile-page">
       <PageHeader />
-      <div className="sticky top-[64px] bg-background/95 backdrop-blur z-20 px-4 pb-3">
+      <div className="sticky below-page-header bg-background/95 backdrop-blur z-20 px-4 pb-3">
         <div className="flex gap-2">
           {PERIODS.map(p => (
             <button

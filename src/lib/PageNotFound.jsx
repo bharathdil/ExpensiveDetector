@@ -1,6 +1,6 @@
 import { useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { db } from '@/api/supabaseClient';
+import { db } from '@/api/localStorageClient';
 
 export default function PageNotFound({}) {
     const location = useLocation();

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { db } from '@/api/supabaseClient';
+import { db } from '@/api/localStorageClient';
 import { useTheme } from '@/lib/ThemeProvider';
 import { LogOut, Trash2, Moon, Sun, ChevronRight, Shield, Bell, Info } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
@@ -59,7 +59,7 @@ export default function Settings() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-28">
+    <div className="mobile-page">
       <PageHeader title="Settings" />
 
       <div className="px-4 pt-4 space-y-4">

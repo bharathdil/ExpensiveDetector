@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { db } from '@/api/supabaseClient';
+import { db } from '@/api/localStorageClient';
 import { Search, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import TransactionItem from '@/components/expense/TransactionItem';
@@ -74,10 +74,10 @@ export default function Transactions() {
   const totalFiltered = filtered.filter(e => e.type === 'expense').reduce((s, e) => s + e.amount, 0);
 
   return (
-    <div className="min-h-screen bg-background pb-28">
+    <div className="mobile-page">
       <PageHeader />
       {/* Filters */}
-      <div className="sticky top-[64px] bg-background/95 backdrop-blur z-20 px-4 pb-3 space-y-3">
+      <div className="sticky below-page-header bg-background/95 backdrop-blur z-20 px-4 pb-3 space-y-3">
         <div className="flex items-center justify-between">
           <span />
 

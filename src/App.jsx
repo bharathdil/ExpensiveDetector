@@ -46,7 +46,7 @@ const AuthenticatedApp = () => {
   if (authError) {
     if (authError.type === 'user_not_registered') return <UserNotRegisteredError />;
     else if (authError.type === 'auth_required') { navigateToLogin(); return null; }
-    return <AppErrorScreen title="Supabase Setup Needed" message={authError.message} />;
+    return <AppErrorScreen title="App Data Error" message={authError.message} />;
   }
 
   return (
