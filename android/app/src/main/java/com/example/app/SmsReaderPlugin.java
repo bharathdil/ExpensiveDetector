@@ -3,6 +3,7 @@ package com.example.app;
 import android.Manifest;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 
 import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
@@ -17,7 +18,9 @@ import com.getcapacitor.annotation.PermissionCallback;
 @CapacitorPlugin(
     name = "SmsReader",
     permissions = {
-        @Permission(strings = { Manifest.permission.READ_SMS }, alias = "sms")
+        @Permission(strings = { Manifest.permission.READ_SMS }, alias = "sms"),
+        @Permission(strings = { Manifest.permission.RECEIVE_SMS }, alias = "smsReceive"),
+        @Permission(strings = { Manifest.permission.POST_NOTIFICATIONS }, alias = "notifications")
     }
 )
 public class SmsReaderPlugin extends Plugin {
@@ -34,6 +37,49 @@ public class SmsReaderPlugin extends Plugin {
         loadMessages(call);
     }
 
+    @PluginMethod
+    public void setPaymentAlertsEnabled(PluginCall call) {
+        boolean enabled = call.getBoolean("enabled", false);
+
+        if (!enabled) {
+            PaymentSmsStore.setEnabled(getContext(), false);
+            resolveStatus(call);
+            return;
+        }
+
+        if (getPermissionState("smsReceive") != PermissionState.GRANTED) {
+            requestPermissionForAlias("smsReceive", call, "paymentAlertsPermissionCallback");
+            return;
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            getPermissionState("notifications") != PermissionState.GRANTED) {
+            requestPermissionForAlias("notifications", call, "paymentAlertsPermissionCallback");
+            return;
+        }
+
+        PaymentSmsStore.setEnabled(getContext(), true);
+        resolveStatus(call);
+    }
+
+    @PluginMethod
+    public void getPaymentAlertsStatus(PluginCall call) {
+        resolveStatus(call);
+    }
+
+    @PluginMethod
+    public void getPendingPaymentMessages(PluginCall call) {
+        JSObject result = new JSObject();
+        result.put("messages", PaymentSmsStore.getPendingJson(getContext()));
+        call.resolve(result);
+    }
+
+    @PluginMethod
+    public void clearPendingPaymentMessages(PluginCall call) {
+        PaymentSmsStore.clearPending(getContext());
+        call.resolve();
+    }
+
     @PermissionCallback
     private void smsPermissionCallback(PluginCall call) {
         if (getPermissionState("sms") == PermissionState.GRANTED) {
@@ -42,6 +88,25 @@ public class SmsReaderPlugin extends Plugin {
         }
 
         call.reject("SMS permission was denied.");
+    }
+
+    @PermissionCallback
+    private void paymentAlertsPermissionCallback(PluginCall call) {
+        if (getPermissionState("smsReceive") != PermissionState.GRANTED) {
+            PaymentSmsStore.setEnabled(getContext(), false);
+            call.reject("SMS receive permission is required for payment alerts.");
+            return;
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            getPermissionState("notifications") != PermissionState.GRANTED) {
+            PaymentSmsStore.setEnabled(getContext(), false);
+            call.reject("Notification permission is required for payment alerts.");
+            return;
+        }
+
+        PaymentSmsStore.setEnabled(getContext(), true);
+        resolveStatus(call);
     }
 
     private void loadMessages(PluginCall call) {
@@ -87,5 +152,13 @@ public class SmsReaderPlugin extends Plugin {
         } catch (Exception error) {
             call.reject("Could not scan SMS messages.", error);
         }
+    }
+
+    private void resolveStatus(PluginCall call) {
+        JSObject result = new JSObject();
+        result.put("enabled", PaymentSmsStore.isEnabled(getContext()));
+        result.put("smsReceivePermission", getPermissionState("smsReceive").toString());
+        result.put("notificationPermission", getPermissionState("notifications").toString());
+        call.resolve(result);
     }
 }

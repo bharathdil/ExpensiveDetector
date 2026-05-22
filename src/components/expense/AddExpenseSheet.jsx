@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,16 @@ import { toast } from '@/components/ui/use-toast';
 import { CATEGORY_LIST } from '@/lib/categoryConfig';
 import { cn } from '@/lib/utils';
 
+const createForm = (prefill) => ({
+  amount: prefill?.amount || '',
+  type: prefill?.type || 'expense',
+  category: prefill?.category || 'other',
+  merchant: prefill?.merchant || '',
+  note: prefill?.note || '',
+  location: prefill?.location || '',
+  date: prefill?.date ? new Date(prefill.date).toISOString().slice(0, 16) : new Date().toISOString().slice(0, 16),
+});
+
 const TYPES = [
   { value: 'expense', label: '💸 Expense' },
   { value: 'income', label: '💰 Income' },
@@ -15,15 +25,13 @@ const TYPES = [
 
 export default function AddExpenseSheet({ open, onOpenChange, onSave, prefill }) {
   const [isSaving, setIsSaving] = useState(false);
-  const [form, setForm] = useState({
-    amount: prefill?.amount || '',
-    type: prefill?.type || 'expense',
-    category: prefill?.category || 'other',
-    merchant: prefill?.merchant || '',
-    note: prefill?.note || '',
-    location: prefill?.location || '',
-    date: prefill?.date ? new Date(prefill.date).toISOString().slice(0, 16) : new Date().toISOString().slice(0, 16),
-  });
+  const [form, setForm] = useState(() => createForm(prefill));
+
+  useEffect(() => {
+    if (open) {
+      setForm(createForm(prefill));
+    }
+  }, [open, prefill]);
 
   const handleChange = (field, value) => setForm(f => ({ ...f, [field]: value }));
 
@@ -38,6 +46,9 @@ export default function AddExpenseSheet({ open, onOpenChange, onSave, prefill })
         date: new Date(form.date).toISOString(),
         source: prefill?.source || 'manual',
         raw_message: prefill?.raw_message || '',
+        sms_id: prefill?.sms_id || '',
+        sms_sender: prefill?.sms_sender || '',
+        sms_date: prefill?.sms_date || null,
       });
       onOpenChange(false);
     } catch (error) {

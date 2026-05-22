@@ -63,3 +63,56 @@ export async function scanRecentPaymentMessages({ limit = 80, existingExpenses =
     unavailableReason,
   };
 }
+
+export async function setPaymentAlertsEnabled(enabled) {
+  if (!isSmsReaderAvailable()) {
+    return {
+      enabled: false,
+      unavailableReason: 'Payment alerts are available only in the installed Android app.',
+    };
+  }
+
+  return SmsReader.setPaymentAlertsEnabled({ enabled });
+}
+
+export async function getPaymentAlertsStatus() {
+  if (!isSmsReaderAvailable()) {
+    return {
+      enabled: false,
+      unavailableReason: 'Payment alerts are available only in the installed Android app.',
+    };
+  }
+
+  return SmsReader.getPaymentAlertsStatus();
+}
+
+export async function getPendingPaymentTransactions() {
+  if (!isSmsReaderAvailable()) {
+    return [];
+  }
+
+  const result = await SmsReader.getPendingPaymentMessages();
+  const messages = Array.isArray(result?.messages) ? result.messages : [];
+  const parsed = messages
+    .map((message) => {
+      const parsedMessage = parsePaymentMessage(message.body || '');
+      if (!parsedMessage) return null;
+
+      return {
+        ...parsedMessage,
+        _id: message.id || `pending-${message.date}`,
+        sms_id: message.id || '',
+        sms_sender: message.address || '',
+        sms_date: message.date || null,
+        date: message.date ? new Date(Number(message.date)).toISOString() : parsedMessage.date,
+        raw_message: message.body || '',
+      };
+    })
+    .filter(Boolean);
+
+  if (messages.length > 0) {
+    await SmsReader.clearPendingPaymentMessages();
+  }
+
+  return parsed;
+}

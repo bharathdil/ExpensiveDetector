@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { db } from '@/api/localStorageClient';
 import { useTheme } from '@/lib/ThemeProvider';
 import { LogOut, Trash2, Moon, Sun, ChevronRight, Shield, Bell, Info } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
+import { toast } from '@/components/ui/use-toast';
+import { getPaymentAlertsStatus, setPaymentAlertsEnabled } from '@/lib/smsReader';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,6 +41,41 @@ export default function Settings() {
   const { theme, toggleTheme } = useTheme();
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [notificationsLoading, setNotificationsLoading] = useState(false);
+
+  useEffect(() => {
+    getPaymentAlertsStatus()
+      .then((status) => setNotificationsEnabled(Boolean(status.enabled)))
+      .catch(() => setNotificationsEnabled(false));
+  }, []);
+
+  const toggleNotifications = async () => {
+    const nextEnabled = !notificationsEnabled;
+    setNotificationsLoading(true);
+
+    try {
+      const status = await setPaymentAlertsEnabled(nextEnabled);
+      setNotificationsEnabled(Boolean(status.enabled));
+
+      if (status.unavailableReason) {
+        toast({
+          title: 'Notifications unavailable',
+          description: status.unavailableReason,
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      setNotificationsEnabled(false);
+      toast({
+        title: 'Could not enable notifications',
+        description: error?.message || 'Please allow SMS and notification permissions.',
+        variant: 'destructive',
+      });
+    } finally {
+      setNotificationsLoading(false);
+    }
+  };
 
   const handleLogout = async () => {
     await db.auth.logout('/');
@@ -90,7 +127,16 @@ export default function Settings() {
             <SettingRow
               icon={Bell}
               label="Notifications"
-              description="Payment alerts and reminders"
+              description={notificationsEnabled ? 'Payment SMS alerts are on' : 'Notify when payment SMS arrives'}
+              onClick={toggleNotifications}
+              rightSlot={
+                <Switch
+                  checked={notificationsEnabled}
+                  disabled={notificationsLoading}
+                  onCheckedChange={toggleNotifications}
+                  className="pointer-events-none"
+                />
+              }
             />
             <SettingRow
               icon={Shield}

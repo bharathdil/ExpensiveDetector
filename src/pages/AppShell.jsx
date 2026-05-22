@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import BottomNav from '@/components/layout/BottomNav';
 import AddExpenseSheet from '@/components/expense/AddExpenseSheet';
+import PaymentAlertHandler from '@/components/detector/PaymentAlertHandler';
 import AnimatedRoutes from '@/components/layout/AnimatedRoutes';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { db } from '@/api/localStorageClient';
@@ -38,6 +39,7 @@ export default function AppShell() {
         <Outlet />
       </AnimatedRoutes>
       <BottomNav onAdd={() => setAddOpen(true)} />
+      <PaymentAlertHandler />
       <AddExpenseSheet
         open={addOpen}
         onOpenChange={setAddOpen}

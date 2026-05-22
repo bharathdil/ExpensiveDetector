@@ -10,6 +10,7 @@ export default function RecommendedTransactions({ existingExpenses, onSave }) {
   const [confirmItem, setConfirmItem] = useState(null);
   const [scanning, setScanning] = useState(false);
   const [scanMessage, setScanMessage] = useState('Tap refresh to scan recent SMS messages.');
+  const [showAll, setShowAll] = useState(false);
 
   const generateRecommendations = async () => {
     setScanning(true);
@@ -18,6 +19,7 @@ export default function RecommendedTransactions({ existingExpenses, onSave }) {
     try {
       const result = await scanRecentPaymentMessages({ existingExpenses, limit: 100 });
       setRecommendations(result.transactions);
+      setShowAll(false);
 
       if (result.unavailableReason) {
         setScanMessage(result.unavailableReason);
@@ -36,6 +38,7 @@ export default function RecommendedTransactions({ existingExpenses, onSave }) {
   };
 
   const visible = recommendations.filter(r => !dismissed.has(r._id));
+  const displayed = showAll ? visible : visible.slice(0, 4);
 
   return (
     <>
@@ -66,7 +69,7 @@ export default function RecommendedTransactions({ existingExpenses, onSave }) {
           </div>
         ) : visible.length > 0 ? (
           <div className="space-y-2">
-            {visible.slice(0, 4).map(rec => {
+            {displayed.map(rec => {
               const config = getCategoryConfig(rec.category);
               return (
                 <div
@@ -103,9 +106,13 @@ export default function RecommendedTransactions({ existingExpenses, onSave }) {
               );
             })}
             {visible.length > 4 && (
-              <p className="text-xs text-center text-muted-foreground pt-1">
-                +{visible.length - 4} more detected
-              </p>
+              <button
+                type="button"
+                onClick={() => setShowAll(current => !current)}
+                className="w-full py-1 text-xs text-center text-primary font-semibold"
+              >
+                {showAll ? 'Show less' : `+${visible.length - 4} more detected`}
+              </button>
             )}
           </div>
         ) : (
